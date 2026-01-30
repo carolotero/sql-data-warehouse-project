@@ -1,3 +1,26 @@
+/*
+===============================================================================
+DDL Script: Create Gold Tables
+===============================================================================
+Script Purpose:
+    This script creates views for the 'gold' layer in the data warehouse.
+	The Gold layer represents the final dimension and fact tables (Star schema)
+
+	Each view performs transformations and combines data from the Silver layer
+	to produce a clean, enriched, and business-ready dataset.
+
+Usage:
+	- These views can be queried directly for analytics and reporting.
+  
+===============================================================================
+*/
+-- ===============================================================================
+-- Create Dimension: gold.dim_customers
+-- ===============================================================================
+IF OBJECT('gold.dim_customers', 'V') IS NOT NULL
+	DROP VIEW gold.dim_customers;
+GO
+	
 CREATE VIEW gold.dim_customers AS
 SELECT 
 	ROW_NUMBER() OVER (ORDER BY cst_id) AS customer_key
@@ -17,7 +40,12 @@ LEFT JOIN [silver].[erp_cust_az12] T2 ON T1.cst_key = T2.cid
 LEFT JOIN [silver].[erp_loc_a101] T3 ON T1.cst_key = T3.cid;
 
 
----------------------------------------------------------------------------
+-- ===============================================================================
+-- Create Dimension: gold.dim_products
+-- ===============================================================================
+IF OBJECT('gold.dim_products', 'V') IS NOT NULL
+	DROP VIEW gold.dim_products;
+GO
 CREATE VIEW gold.dim_products AS
 SELECT
 	ROW_NUMBER() OVER (ORDER BY prd_start_dt, prd_key) AS product_key
@@ -37,9 +65,13 @@ LEFT JOIN [silver].[erp_px_cat_g1v2] T2 ON T1.cat_id = T2.id
 WHERE T1.prd_end_dt IS NULL ---Filter out all historical data
 
 
-----------------------------------------------------------------------------
+-- ===============================================================================
+-- Create Dimension: gold.fact_sales
+-- ===============================================================================
+IF OBJECT('gold.fact_sales', 'V') IS NOT NULL
+	DROP VIEW gold.fact_sales;
+GO
 CREATE VIEW gold.fact_sales AS
-
 SELECT
 T1.sls_ord_num AS order_number
 ,T2.product_key
